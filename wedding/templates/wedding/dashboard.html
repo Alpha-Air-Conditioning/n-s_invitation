@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Private RSVP Details</title>
+<style>
+:root{--wine:#641528;--gold:#b8922e;--cream:#fffaf0;--ink:#2a1a10}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:15px Arial,sans-serif}
+header{background:var(--wine);color:white;padding:24px clamp(16px,4vw,44px)}
+header h1{font-family:Georgia,serif;font-weight:400;margin:0}
+main{max-width:1200px;margin:28px auto;padding:0 16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.card{background:#fff;border:1px solid #eadbb8;border-radius:10px;padding:18px}
+.label{color:#765d45;font-size:13px}.num{font-size:30px;color:var(--wine);font-weight:700;margin-top:8px}
+h2{font-size:20px;margin:28px 0 12px}.table-wrap{overflow-x:auto;background:white;border:1px solid #eadbb8;border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:850px}th,td{text-align:left;padding:12px;border-bottom:1px solid #eee5d5;font-size:14px;vertical-align:top}th{background:#f7edd8}
+.muted{font-size:13px;color:#765d45;line-height:1.5}
+.status{font-weight:bold;color:var(--wine)}
+</style>
+</head>
+<body>
+<header><h1>Private Wedding RSVP Details</h1></header>
+<main>
+<p class="muted">Private RSVP information. Keep this URL confidential; anyone who has the full token URL can view these records.</p>
+<section class="stats">
+<div class="card"><div class="label">Total responses</div><div class="num">{{ total_responses }}</div></div>
+<div class="card"><div class="label">Attending responses</div><div class="num">{{ attending_count }}</div></div>
+<div class="card"><div class="label">Declined responses</div><div class="num">{{ declined_count }}</div></div>
+<div class="card"><div class="label">Expected guests</div><div class="num">{{ guests_expected }}</div></div>
+</section>
+<h2>Guest responses</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Name</th><th>Phone / WhatsApp</th><th>Number of guests</th><th>Invited by</th><th>Attendance</th><th>Message</th><th>Submitted</th></tr></thead>
+<tbody>
+{% for rsvp in responses %}
+<tr><td>{{ rsvp.name }}</td><td>{{ rsvp.phone|default:"—" }}</td><td>{{ rsvp.guests }}</td><td>{{ rsvp.side|default:"—" }}</td><td class="status">{{ rsvp.get_attendance_display }}</td><td>{{ rsvp.message|default:"—" }}</td><td>{{ rsvp.created_at|date:"d M Y, h:i A" }}</td></tr>
+{% empty %}<tr><td colspan="7">No RSVP responses have been received yet.</td></tr>{% endfor %}
+</tbody></table></div>
+</main>
+</body></html>
