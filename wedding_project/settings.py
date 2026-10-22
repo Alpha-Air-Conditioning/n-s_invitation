@@ -44,9 +44,15 @@ WSGI_APPLICATION = "wedding_project.wsgi.application"
 
 db_url = os.environ.get("DATABASE_URL", "")
 is_sqlite = not db_url or "sqlite" in db_url
+
+if is_sqlite and os.environ.get("VERCEL"):
+    sqlite_path = Path("/tmp/db.sqlite3")
+else:
+    sqlite_path = BASE_DIR / "db.sqlite3"
+
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        default=f"sqlite:///{sqlite_path}",
         conn_max_age=600,
         ssl_require=False if is_sqlite else (not DEBUG),
     )
