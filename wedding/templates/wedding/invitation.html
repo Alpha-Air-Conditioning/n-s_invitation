@@ -574,7 +574,6 @@
     <li><a href="#couple">The Couple</a></li>
     <li><a href="#events">Events</a></li>
     <li><a href="#countdown">Countdown</a></li>
-    <li><a href="#rsvp">RSVP</a></li>
   </ul>
 </nav>
 
@@ -600,7 +599,7 @@
 
   <p class="hero-date-line">Saturday · 7 November 2026 · St. Mary’s Church, Tirur</p>
 
-  <a href="#rsvp" class="hero-cta">Accept the Invitation</a>
+  <a href="#events" class="hero-cta">View Ceremony Details</a>
 
   <div class="scroll-hint">↓ Scroll</div>
 </section>
@@ -708,49 +707,7 @@
   </p>
 </section>
 
-<!-- RSVP -->
-<section id="rsvp">
-  <p class="section-label" style="color:var(--gold);">Kindly Join Us</p>
-  <h2 class="section-title">Kindly RSVP</h2>
-  <p class="rsvp-sub">Please let us know if you can join us</p>
 
-  <form class="rsvp-form" id="rsvpForm" onsubmit="submitRSVP(event)">
-    {% csrf_token %}
-    <div class="rsvp-row">
-      <input type="text" placeholder="Full Name" required id="rsvp-name" />
-      <input type="tel" placeholder="Phone / WhatsApp" id="rsvp-phone" />
-    </div>
-    <div class="rsvp-row">
-      <input type="number" placeholder="Number of Guests" min="1" max="20" id="rsvp-guests" />
-      <select id="rsvp-side">
-        <option value="" disabled selected>Invited by</option>
-        <option>Bride's Side</option>
-        <option>Groom's Side</option>
-        <option>Family Friend</option>
-      </select>
-    </div>
-    <div>
-      <p style="font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:0.6rem;">Will you attend?</p>
-      <div class="attend-btns">
-        <button type="button" class="attend-btn selected" onclick="selectAttend(this, 'yes')">✓ Joyfully Accept</button>
-        <button type="button" class="attend-btn" onclick="selectAttend(this, 'no')">✗ Regretfully Decline</button>
-      </div>
-    </div>
-    <textarea placeholder="Blessings / Message (optional)" rows="3" id="rsvp-msg"></textarea>
-    <button type="submit" class="submit-btn" id="rsvp-submit-btn">Confirm RSVP</button>
-  </form>
-
-  <div class="rsvp-success" id="rsvpSuccess">
-    <div style="font-size:1.8rem;color:var(--gold-light);margin-bottom:0.4rem;">✧</div>
-    <h3 style="font-family:'Great Vibes',cursive;font-size:clamp(2.2rem,5vw,3rem);color:var(--gold-light);margin-bottom:0.6rem;line-height:1.2;">Thank You!</h3>
-    <p style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-style:italic;color:#fff;margin-bottom:0.6rem;" id="rsvpSuccessMsg">
-      Your RSVP has been saved successfully.
-    </p>
-    <p style="font-size:0.9rem;color:rgba(255,255,255,0.65);letter-spacing:0.05em;">
-      We look forward to celebrating this special day with you ♡
-    </p>
-  </div>
-</section>
 
 <!-- FOOTER -->
 <footer>
@@ -798,62 +755,6 @@
   }, { threshold: 0.12 });
   document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-  // Attend toggle
-  let attendValue = 'yes';
-  function selectAttend(btn, val) {
-    attendValue = val;
-    document.querySelectorAll('.attend-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-  }
-
-  // RSVP submit -> Django database (does not expose the admin dashboard)
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return '';
-  }
-
-  async function submitRSVP(e) {
-    e.preventDefault();
-
-    const payload = {
-      name: document.getElementById('rsvp-name').value.trim(),
-      phone: document.getElementById('rsvp-phone').value.trim(),
-      guests: document.getElementById('rsvp-guests').value || '1',
-      side: document.getElementById('rsvp-side').value,
-      attendance: attendValue,
-      message: document.getElementById('rsvp-msg').value.trim()
-    };
-
-    const submitButton = document.querySelector('#rsvpForm button[type="submit"]');
-    const originalText = submitButton.textContent;
-    submitButton.disabled = true;
-    submitButton.textContent = 'Submitting...';
-
-    const csrfToken = getCookie('csrftoken') || (document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '');
-
-    try {
-      const response = await fetch('/rsvp/submit/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify(payload),
-        credentials: 'same-origin'
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Unable to submit RSVP.');
-
-      document.getElementById('rsvpForm').style.display = 'none';
-      document.getElementById('rsvpSuccess').style.display = 'block';
-    } catch (error) {
-      alert(error.message || 'Could not submit RSVP. Please try again.');
-      submitButton.disabled = false;
-      submitButton.textContent = originalText;
-    }
-  }
 </script>
 </body>
 </html>
