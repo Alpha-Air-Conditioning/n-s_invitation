@@ -52,27 +52,19 @@ def submit_rsvp(request):
         return JsonResponse({"error": "Please check the submitted information."}, status=400)
 
 def private_rsvp_list(request, token):
-    configured_token = str(getattr(settings, "RSVP_VIEW_TOKEN", "") or "").strip()
-    provided_token = str(token or "").strip()
-    
-    # Allow configured token or default generation token
-    valid_tokens = [t for t in (configured_token, "hsiaAjiOD064kDaD-MZrKAlH702slO8_", "dev-secret-token") if t]
-    is_valid = any(secrets.compare_digest(provided_token, t) for t in valid_tokens)
-    
-    if not is_valid:
-        return HttpResponseForbidden("Access denied. Please verify your private RSVP token.")
-
     try:
-        responses = RSVP.objects.all()
-        attending = responses.filter(attendance="yes")
-        guests_expected = attending.aggregate(total=Sum("guests"))["total"] or 0
-        total_responses = responses.count()
-        attending_count = attending.count()
-        declined_count = responses.filter(attendance="no").count()
-    except Exception:
-        from django.core.management import call_command
+        configured_token = str(getattr(settings, "RSVP_VIEW_TOKEN", "") or "").strip()
+        provided_token = str(token or "").strip()
+        
+        # Allow configured token or default generation token
+        valid_tokens = [t for t in (configured_token, "hsiaAjiOD064kDaD-MZrKAlH702slO8_", "dev-secret-token") if t]
+        is_valid = any(secrets.compare_digest(provided_token, t) for t in valid_tokens)
+        
+        if not is_valid:
+            return HttpResponseForbidden("Access denied. Please verify your private RSVP token.")
+
+        # Try querying or auto-migrating if table is missing
         try:
-            call_command("migrate", interactive=False)
             responses = RSVP.objects.all()
             attending = responses.filter(attendance="yes")
             guests_expected = attending.aggregate(total=Sum("guests"))["total"] or 0
@@ -80,17 +72,23 @@ def private_rsvp_list(request, token):
             attending_count = attending.count()
             declined_count = responses.filter(attendance="no").count()
         except Exception:
-            responses = []
-            guests_expected = 0
-            total_responses = 0
-            attending_count = 0
-            declined_count = 0
+            from django.core.management import call_command
+            call_command("migrate", interactive=False)
+            responses = RSVP.objects.all()
+            attending = responses.filter(attendance="yes")
+            guests_expected = attending.aggregate(total=Sum("guests"))["total"] or 0
+            total_responses = responses.count()
+            attending_count = attending.count()
+            declined_count = responses.filter(attendance="no").count()
 
-    context = {
-        "responses": responses,
-        "total_responses": total_responses,
-        "attending_count": attending_count,
-        "declined_count": declined_count,
-        "guests_expected": guests_expected,
-    }
-    return render(request, "wedding/dashboard.html", context)
+        context = {
+            "responses": responses,
+            "total_responses": total_responses,
+            "attending_count": attending_count,
+            "declined_count": declined_count,
+            "guests_expected": guests_expected,
+        }
+        return render(request, "wedding/dashboard.html", context)
+    except Exception as e:
+        import traceback
+        return HttpResponse(f"<h3>Private RSVP Setup Status</h3><pre>{traceback.format_exc()}</pre>", status=200)
